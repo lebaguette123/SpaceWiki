@@ -1,0 +1,18 @@
+[meta]
+title = "RS-25"
+type = "engine"
+subtype = "cryogenic"
+
+[infobox]
+first_flight = "1981-04-12"
+manufacturer = "Rocketdyne"
+cost_unit = "$40M"
+predecessor = "HG-3"
+successor = ""
+country = "United States"
+
+[body]
+text = """
+# Overview
+The RS-25 is a liquid fueled, cryogenic rocket engine used on the Space Shuttle.
+"""
