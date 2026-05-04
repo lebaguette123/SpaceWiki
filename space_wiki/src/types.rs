@@ -39,7 +39,8 @@ pub enum LaunchVehicleSubtype {
 }
 
 pub enum SpacecraftSubtype {
-    Capsule,
+    CrewCapsule,
+    CargoCapsule,
     Lander,
     Satellite,
     Spacestation,
