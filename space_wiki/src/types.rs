@@ -36,6 +36,7 @@ pub enum LaunchVehicleSubtype {
     HeavyLift,
     MediumLift,
     SmallLift,
+    UpperStage,
 }
 
 pub enum SpacecraftSubtype {
@@ -53,4 +54,5 @@ pub enum Block{
 
 pub enum Segment{
     Text(String),
+    Link { target: String, display: Option<String>, id: usize },
 }
