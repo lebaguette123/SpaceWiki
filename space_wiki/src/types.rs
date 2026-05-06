@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use indexmap::IndexMap;
 
 pub struct Article{
     pub title: String,
@@ -8,8 +8,7 @@ pub struct Article{
 }
 
 pub struct Infobox{
-    pub flat_fields: HashMap<String, String>,
-    pub field_order: Vec<String>,
+    pub fields: IndexMap<String, String>,
 }
 
 pub struct Document{

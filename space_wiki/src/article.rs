@@ -2,7 +2,7 @@ use crate::types::{Article, ArticleType, Block, Document, Infobox, Segment};
 use std::fs::read_to_string;
 use std::path::Path;
 use crate::types::{EngineSubtype, LaunchVehicleSubtype, SpacecraftSubtype};
-use std::collections::HashMap;
+use indexmap::IndexMap;
 
 pub fn load_article(path: &Path) -> Result<Article, String>{
     let contents = read_to_string(path).map_err(|e| e.to_string())?;
@@ -44,19 +44,15 @@ pub fn load_article(path: &Path) -> Result<Article, String>{
     let infobox = value.get("infobox")
         .and_then(|i| i.as_table())
         .ok_or("Missing infobox".to_string())?;
-    let mut flat_fields = HashMap::new();
-    let mut field_order = Vec::new();
+    let mut fields = IndexMap::new();
     for(key, val) in infobox.iter(){
         if let Some(s) = val.as_str(){
-            field_order.push(key.clone());
-            flat_fields.insert(key.clone(), s.to_string());
+            fields.insert(key.clone(), s.to_string());
 
         }
     }
     let infobox = Infobox{
-        flat_fields,
-        field_order,
-
+        fields,
     };
 
     let body = value.get("body")

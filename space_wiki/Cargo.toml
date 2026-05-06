@@ -9,3 +9,4 @@ ratatui = "0.30.0"
 serde = { version = "1.0.228", features = ["derive"] }
 toml = "1.1.2"
 log = "0.4.29"
+indexmap = "2.14.0"

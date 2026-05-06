@@ -1213,6 +1213,7 @@ name = "space_wiki"
 version = "0.1.0"
 dependencies = [
  "crossterm",
+ "indexmap",
  "log",
  "ratatui",
  "serde",
