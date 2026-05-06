@@ -54,5 +54,5 @@ pub enum Block{
 
 pub enum Segment{
     Text(String),
-    Link { target: String, display: Option<String>, id: usize },
+    Link { target: String, display: Option<String> },
 }
