@@ -1,8 +1,8 @@
-use crate::types::{Article, ArticleType, Block, Document, Infobox, Segment};
+use crate::types::{Article, ArticleType, Infobox, EngineSubtype, LaunchVehicleSubtype, SpacecraftSubtype};
 use std::fs::read_to_string;
 use std::path::Path;
-use crate::types::{EngineSubtype, LaunchVehicleSubtype, SpacecraftSubtype};
 use indexmap::IndexMap;
+use crate::parser::parse_body;
 
 pub fn load_article(path: &Path) -> Result<Article, String>{
     let contents = read_to_string(path).map_err(|e| e.to_string())?;
@@ -61,10 +61,7 @@ pub fn load_article(path: &Path) -> Result<Article, String>{
     let body_text = body.get("text")
     .and_then(|t| t.as_str())
     .ok_or("Missing body text".to_string())?;
-    //TODO implement parsing logic to get the heading with the body text for document.
-    //This is a primative implementation to test the function building.
-    let document = vec![Block::Paragraph {segments: vec![Segment::Text(body_text.to_string())]}];
-    let document = Document{ blocks: document };
+    let document = parse_body(body_text);
     let article = Article{
         title,
         article_type,
