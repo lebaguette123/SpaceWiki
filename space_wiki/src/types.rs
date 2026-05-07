@@ -55,3 +55,16 @@ pub enum Segment{
     Text(String),
     Link { target: String, display: Option<String> },
 }
+
+pub enum SidebarEntry {
+    TypeHeading(String),
+    SubtypeHeading(String),
+    Article(String),
+}
+
+#[allow(dead_code)]
+pub enum SidebarMode {
+    Sections,
+    OnThisPage,
+    History,
+}
