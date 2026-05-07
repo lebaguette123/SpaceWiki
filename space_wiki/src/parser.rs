@@ -42,6 +42,7 @@ pub fn parse_body(text: &str) -> Document{
     }
     Document { blocks }
 }
+
 pub fn flush_buffer(buffer: &mut Vec<String>) -> Option<Block>{
     if buffer.is_empty() {
         return None
@@ -51,6 +52,7 @@ pub fn flush_buffer(buffer: &mut Vec<String>) -> Option<Block>{
     buffer.clear();
     Some(Block::Paragraph { segments: seg })
 }
+
 pub fn segments_from_str(line: &str) -> Vec<Segment>{
     let mut segments = Vec::new();
     let mut remaining = line;
@@ -86,6 +88,5 @@ pub fn segments_from_str(line: &str) -> Vec<Segment>{
             }
         }
     }
-
     segments
 }

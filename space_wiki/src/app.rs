@@ -53,6 +53,7 @@ impl App{
             self.selected_sidebar_index = i;
         }
     }
+
     pub fn move_sidebar_up(&mut self){
         let current_list = self.sidebar_entries();
         let before = current_list
@@ -63,6 +64,7 @@ impl App{
             self.selected_sidebar_index = i;
         }
     }
+
     pub fn sidebar_entries(&self) -> Vec<SidebarEntry>{
         let mut articles: Vec<(&String, &Article)> = self.loaded_articles.iter().collect();
         articles.sort_by(|(_,a), (_, b)| a.title.cmp(&b.title));
@@ -87,6 +89,7 @@ impl App{
         entries
     }
 }
+
 fn type_order(t: &ArticleType) -> (u8, u8){
     match t{
         ArticleType::LaunchVehicle(st) =>{

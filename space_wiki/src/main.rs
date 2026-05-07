@@ -2,6 +2,7 @@ mod types;
 mod app;
 mod article;
 mod parser;
+mod ui;
 
 use std::io::stdout;
 use crossterm::event::{self, Event, KeyCode};
@@ -41,6 +42,4 @@ fn main() {
            }
        }
     }
-
-
 }
