@@ -59,7 +59,7 @@ pub enum Segment{
 pub enum SidebarEntry {
     TypeHeading(String),
     SubtypeHeading(String),
-    Article(String),
+    Article{ title: String, key: String },
 }
 
 #[allow(dead_code)]

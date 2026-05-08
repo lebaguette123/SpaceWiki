@@ -10,7 +10,6 @@ use crossterm::execute;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
-use ratatui::widgets::Paragraph;
 use crate::app::App;
 
 fn cleanup(){
@@ -20,7 +19,7 @@ fn cleanup(){
 
 fn main() {
     let mut app = App::new().unwrap();
-    app.open_article("rs-25").unwrap();
+    app.open_article("rs-25").ok();
 
     std::panic::set_hook(Box::new(|_| cleanup()));
     enable_raw_mode().unwrap();
@@ -30,11 +29,7 @@ fn main() {
     let mut terminal = Terminal::new(backend).unwrap();
 
     loop{
-        terminal.draw(|frame| {
-            let area = frame.area();
-            let paragraph = Paragraph::new("SpaceWiki - press q to quit");
-            frame.render_widget(paragraph, area);
-        }).unwrap();
+        terminal.draw(|frame| ui::draw(frame, &app)).unwrap();
        if let Ok(Event::Key(key)) = event::read() {
            if key.code == KeyCode::Char('q') {
                cleanup();

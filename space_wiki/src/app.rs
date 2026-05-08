@@ -47,7 +47,7 @@ impl App{
         let next = current_list
             .iter()
             .enumerate()
-            .find(|(i, entry)| i > &self.selected_sidebar_index && matches!(entry, SidebarEntry::Article(_)));
+            .find(|(i, entry)| i > &self.selected_sidebar_index && matches!(entry, SidebarEntry::Article{..}));
 
         if let Some((i, _ )) = next{
             self.selected_sidebar_index = i;
@@ -59,7 +59,7 @@ impl App{
         let before = current_list
             .iter()
             .enumerate()
-            .rev().find(|(i, entry)| i < &self.selected_sidebar_index && matches!(entry, SidebarEntry::Article(_)));
+            .rev().find(|(i, entry)| i < &self.selected_sidebar_index && matches!(entry, SidebarEntry::Article{..}));
         if let Some((i, _ )) = before{
             self.selected_sidebar_index = i;
         }
@@ -73,7 +73,7 @@ impl App{
         let mut last_type: Option<u8> = None;
         let mut last_subtype: Option<u8> = None;
 
-        for (_, article) in articles {
+        for (stem, article) in articles {
             let (t, st) = type_order(&article.article_type);
             if Some(t) != last_type{
                 entries.push(SidebarEntry::TypeHeading(type_display(&article.article_type).0.to_string()));
@@ -82,7 +82,7 @@ impl App{
             if Some(st) != last_subtype{
                 entries.push(SidebarEntry::SubtypeHeading(type_display(&article.article_type).1.to_string()));
             }
-            entries.push(SidebarEntry::Article(article.title.clone()));
+            entries.push(SidebarEntry::Article{ title: article.title.clone(), key: stem.clone() });
             last_type = Some(t);
             last_subtype = Some(st);
         }
@@ -128,7 +128,7 @@ fn type_order(t: &ArticleType) -> (u8, u8){
     }
 }
 
-fn type_display(t: &ArticleType) -> (&str, &str){
+pub fn type_display(t: &ArticleType) -> (&str, &str){
     match t {
         ArticleType::LaunchVehicle(st) => {
             let subtype = match st {
@@ -147,7 +147,7 @@ fn type_display(t: &ArticleType) -> (&str, &str){
                 SpacecraftSubtype::Lander => "LANDER",
                 SpacecraftSubtype::Satellite => "SATELLITE",
                 SpacecraftSubtype::Probe => "PROBE",
-                SpacecraftSubtype::Spacestation => "SPACESTATION",
+                SpacecraftSubtype::Spacestation => "SPACE STATION",
             };
             ("SPACECRAFT", subtype)
         },
