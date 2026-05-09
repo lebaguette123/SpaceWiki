@@ -1,10 +1,11 @@
 use ratatui::Frame;
 use ratatui::layout::{Constraint, Layout};
 use ratatui::prelude::Direction;
-use ratatui::style::{Color, Style};
+use ratatui::style::{Color, Modifier, Style};
+use ratatui::text::{Line, Span};
 use crate::app::{type_display, App};
 use ratatui::widgets::{List, ListItem, Paragraph};
-use crate::types::{ArticleType, SidebarEntry};
+use crate::types::{ArticleType, Block, Segment, SidebarEntry};
 
 pub fn draw(frame: &mut Frame, app: &App){
     const MIN_WIDTH: u16 = 80;
@@ -48,9 +49,22 @@ pub fn draw(frame: &mut Frame, app: &App){
     let sidebar = List::new(items);
     frame.render_widget(sidebar, chunks[0]);
 
+    let field_count = app.current_article
+        .as_ref()
+        .and_then(|k| app.loaded_articles.get(k))
+        .map(|a| a.infobox.fields.len())
+        .unwrap_or(0);
+    const COL_WIDTH: u16 = 20;
+    let cols = (chunks[1].width/COL_WIDTH) as usize;
+
+    let rows =  (field_count + cols-1)/cols;
+
+    let infobox_height = (rows * 2 + 2) as u16;
+
+
     let main_chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(3), Constraint::Length(10), Constraint::Min(0)])
+        .constraints([Constraint::Length(3), Constraint::Length(infobox_height), Constraint::Min(0)])
         .split(chunks[1]);
 
     if let Some(key) = &app.current_article{
@@ -58,6 +72,49 @@ pub fn draw(frame: &mut Frame, app: &App){
             let (t, st) = type_display_pretty(&article.article_type);
             let par = Paragraph::new(format!("{}  {} · {} ", article.title, t, st));
             frame.render_widget(par, main_chunks[0]);
+            let infobox_chunks = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints(std::iter::repeat(Constraint::Fill(1)).take(cols).collect::<Vec<_>>())
+                .split(main_chunks[1]);
+
+            for col_index in 0..cols{
+                let mut lines: Vec<Line> = Vec::new();
+                for (i, (label, value)) in article.infobox.fields.iter().enumerate(){
+                    if i % cols == col_index{
+                        let value_display = if value.chars().count() > COL_WIDTH as usize { let neo = value.chars().take(COL_WIDTH as usize - 3).collect::<String>(); format!("{}…", neo) } else { value.chars().take(COL_WIDTH as usize - 3).collect::<String>() };
+
+                        lines.push(Line::styled(label.replace("_", " ").to_uppercase(), Style::default().fg(Color::DarkGray)));
+                        lines.push(Line::styled( value_display, Style::default().fg(Color::White)));
+                    }
+                }
+                let par = Paragraph::new(lines);
+                frame.render_widget(par, infobox_chunks[col_index]);
+            }
+
+            let body: Vec<Line> = article.body.blocks
+                .iter()
+                .map(|block| match block{
+                    Block::Heading { level, text } =>{
+                        let style = match level{
+                            1 => Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+                            2 => Style::default().fg(Color::Gray).add_modifier(Modifier::BOLD),
+                            _ => Style::default().fg(Color::DarkGray).add_modifier(Modifier::BOLD),
+                        };
+                        Line::styled(text, style)
+                    },
+                    Block::Paragraph { segments } => {
+                        let text = segments.iter().map(|seg| match seg{
+                            Segment::Text(s) => Span::styled(s, Style::default().fg(Color::DarkGray)),
+                            Segment::Link{ target, display } => {
+                                let link = display.as_deref().unwrap_or(target);
+                                Span::styled(link, Style::default().fg(Color::Cyan))
+                            }
+                        }).collect::<Vec<Span>>();
+                        Line::from(text)
+                    }
+            }).collect();
+            let body_widget = Paragraph::new(body);
+            frame.render_widget(body_widget, main_chunks[2]);
         }
     }
 }

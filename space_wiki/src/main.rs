@@ -6,11 +6,13 @@ mod ui;
 
 use std::io::stdout;
 use crossterm::event::{self, Event, KeyCode};
+use crossterm::event::KeyEventKind::{Press, Repeat};
 use crossterm::execute;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 use crate::app::App;
+use crate::types::SidebarEntry;
 
 fn cleanup(){
     execute!(stdout(),LeaveAlternateScreen).unwrap();
@@ -19,7 +21,6 @@ fn cleanup(){
 
 fn main() {
     let mut app = App::new().unwrap();
-    app.open_article("rs-25").ok();
 
     std::panic::set_hook(Box::new(|_| cleanup()));
     enable_raw_mode().unwrap();
@@ -31,9 +32,25 @@ fn main() {
     loop{
         terminal.draw(|frame| ui::draw(frame, &app)).unwrap();
        if let Ok(Event::Key(key)) = event::read() {
-           if key.code == KeyCode::Char('q') {
-               cleanup();
-               break;
+           match key.code{
+               KeyCode::Up | KeyCode::Char('k') if key.kind == Press || key.kind == Repeat => {
+                   app.move_sidebar_up();
+               },
+               KeyCode::Down | KeyCode::Char('j') if key.kind == Press || key.kind == Repeat => {
+                   app.move_sidebar_down();
+               },
+               KeyCode::Enter =>{
+                   let art = &app.sidebar_entries()[app.selected_sidebar_index];
+                   match art{
+                       SidebarEntry::Article{ key, .. } => app.open_article(key.as_str()).unwrap(),
+                       _ => ()
+                   }
+               },
+               KeyCode::Char('q') => {
+                   cleanup();
+                   break;
+               },
+               _ => ()
            }
        }
     }

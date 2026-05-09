@@ -1,0 +1,19 @@
+[meta]
+title = "Space Shuttle"
+type = "launch_vehicle"
+subtype = "heavy_lift"
+
+[infobox]
+first_flight = "1981-04-12"
+manufacturer = "Rockwell Intl."
+cost_unit = "$1.5B"
+predecessor = "Saturn V"
+successor = "SLS"
+country = "United States"
+
+[body]
+text = """
+# Overview
+The Space Shuttle was a partially reusable low Earth orbital spacecraft system operated by NASA from 1981 to 2011.
+It was the first orbital spacecraft designed for reuse, and it carried astronauts and cargo to and from low Earth orbit.
+"""

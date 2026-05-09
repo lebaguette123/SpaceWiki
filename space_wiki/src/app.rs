@@ -34,7 +34,10 @@ impl App{
     pub fn open_article(&mut self, name: &str) -> Result<(), String>{
         if self.loaded_articles.contains_key(name){
             self.current_article = Some(name.to_string());
-            self.selected_sidebar_index = 0;
+            let index = self.sidebar_entries()
+                .iter()
+                .position(|entry| matches!(entry, SidebarEntry::Article{ key, ..} if key == name)).unwrap();
+            self.selected_sidebar_index = index;
             Ok(())
         } else {
             Err("Article not found".to_string())
