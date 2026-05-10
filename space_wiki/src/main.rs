@@ -3,6 +3,7 @@ mod app;
 mod article;
 mod parser;
 mod ui;
+mod link;
 
 use std::io::stdout;
 use crossterm::event::{self, Event, KeyCode};

@@ -46,11 +46,13 @@ pub enum SpacecraftSubtype {
     Spacestation,
     Probe,
 }
+#[derive(Clone)]
 pub enum Block{
     Heading { level: u8, text: String },
     Paragraph { segments: Vec<Segment> },
 }
 
+#[derive(Clone)]
 pub enum Segment{
     Text(String),
     Link { target: String, display: Option<String> },

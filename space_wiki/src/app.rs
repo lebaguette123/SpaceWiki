@@ -1,12 +1,17 @@
 use std::fs::read_dir;
 use std::collections::HashMap;
-use crate::types::{Article, ArticleType, EngineSubtype, LaunchVehicleSubtype, SidebarEntry, SpacecraftSubtype};
+use crate::types::{Article, ArticleType, Block, EngineSubtype, LaunchVehicleSubtype, Segment, SidebarEntry, SpacecraftSubtype};
 use crate::article::load_article;
+use crate::link::{LinkSource, UnifiedLink};
+use crate::parser::segments_from_str;
 
 pub struct App{
     pub loaded_articles: HashMap<String, Article>,
     pub current_article: Option<String>,
     pub selected_sidebar_index: usize,
+    pub unified_links: Vec<UnifiedLink>,
+    pub infobox_link_count: usize,
+    pub focused_link: Option<usize>,
 }
 impl App{
     pub fn new() -> Result<App, Box<dyn std::error::Error>>{
@@ -28,6 +33,9 @@ impl App{
             loaded_articles,
             current_article: None,
             selected_sidebar_index: 0,
+            unified_links: Vec::new(),
+            infobox_link_count: 0,
+            focused_link: None,
         })
     }
 
@@ -38,6 +46,8 @@ impl App{
                 .iter()
                 .position(|entry| matches!(entry, SidebarEntry::Article{ key, ..} if key == name)).unwrap();
             self.selected_sidebar_index = index;
+            self.build_unified_links();
+            self.focused_link = None;
             Ok(())
         } else {
             Err("Article not found".to_string())
@@ -90,6 +100,43 @@ impl App{
             last_subtype = Some(st);
         }
         entries
+    }
+    pub fn build_unified_links(&mut self) {
+        if self.current_article.is_none(){
+            self.unified_links = Vec::new();
+            self.infobox_link_count = 0;
+            return;
+        }
+        let mut links: Vec<UnifiedLink> = Vec::new();
+        let mut infobox_count: usize = 0;
+        let key = self.current_article.as_ref().unwrap().clone();
+        let article = self.loaded_articles.get(&key).unwrap();
+        let fields = article.infobox.fields.clone();
+        let body = article.body.blocks.clone();
+
+        for (_, value) in fields.iter(){
+            for seg in segments_from_str(value) {
+                match seg{
+                    Segment::Link{target, display} =>{
+                        links.push(UnifiedLink{target: target.clone(), source: LinkSource::InfboxFlatField, display: display.unwrap_or(target) })
+                    },
+                    _ => ()
+                }
+            }
+        }
+        infobox_count = links.len();
+        for block in body{
+            if let Block::Paragraph {segments} = block{
+                for seg in segments{
+                    if let Segment::Link{target, display} = seg{
+                        links.push(UnifiedLink{target: target.clone(), source: LinkSource::Body, display: display.unwrap_or(target) })
+                    }
+                }
+            }
+        }
+
+        self.unified_links = links;
+        self.infobox_link_count = infobox_count;
     }
 }
 

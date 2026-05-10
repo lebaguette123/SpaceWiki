@@ -5,6 +5,7 @@ use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use crate::app::{type_display, App};
 use ratatui::widgets::{List, ListItem, Paragraph};
+use crate::parser::segments_from_str;
 use crate::types::{ArticleType, Block, Segment, SidebarEntry};
 
 pub fn draw(frame: &mut Frame, app: &App){
@@ -81,10 +82,16 @@ pub fn draw(frame: &mut Frame, app: &App){
                 let mut lines: Vec<Line> = Vec::new();
                 for (i, (label, value)) in article.infobox.fields.iter().enumerate(){
                     if i % cols == col_index{
-                        let value_display = if value.chars().count() > COL_WIDTH as usize { let neo = value.chars().take(COL_WIDTH as usize - 3).collect::<String>(); format!("{}…", neo) } else { value.chars().take(COL_WIDTH as usize - 3).collect::<String>() };
-
-                        lines.push(Line::styled(label.replace("_", " ").to_uppercase(), Style::default().fg(Color::DarkGray)));
-                        lines.push(Line::styled( value_display, Style::default().fg(Color::White)));
+                        let spans: Vec<Span> =  segments_from_str(value)
+                            .into_iter()
+                            .map(|seg| match seg{
+                                Segment::Text(t) => Span::styled(t, Style::default().fg(Color::White)),
+                                Segment::Link{ target, display } => Span::styled(display.unwrap_or(target), Style::default().fg(Color::Cyan)),
+                            }).collect();
+                        if !value.is_empty(){
+                            lines.push(Line::styled(label.replace("_", " ").to_uppercase(), Style::default().fg(Color::DarkGray)));
+                            lines.push(Line::from(spans));
+                        }
                     }
                 }
                 let par = Paragraph::new(lines);
