@@ -52,7 +52,7 @@ fn main() {
                     }
                    }
                },
-               KeyCode::Backspace =>{
+               KeyCode::Backspace if key.kind == Press =>{
                 app.go_back();
                },
                KeyCode::Char('q') => {
