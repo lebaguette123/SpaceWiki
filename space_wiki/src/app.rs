@@ -2,7 +2,7 @@ use std::fs::read_dir;
 use std::collections::{VecDeque,HashMap};
 use crate::types::{Article, ArticleType, Block, EngineSubtype, LaunchVehicleSubtype, Segment, SidebarEntry, SpacecraftSubtype};
 use crate::article::load_article;
-use crate::link::{self, LinkSource, NavLink};
+use crate::link::{LinkSource, NavLink};
 use crate::parser::segments_from_str;
 
 pub struct App{
