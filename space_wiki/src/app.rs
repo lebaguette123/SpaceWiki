@@ -2,14 +2,14 @@ use std::fs::read_dir;
 use std::collections::HashMap;
 use crate::types::{Article, ArticleType, Block, EngineSubtype, LaunchVehicleSubtype, Segment, SidebarEntry, SpacecraftSubtype};
 use crate::article::load_article;
-use crate::link::{LinkSource, UnifiedLink};
+use crate::link::{LinkSource, NavLink};
 use crate::parser::segments_from_str;
 
 pub struct App{
     pub loaded_articles: HashMap<String, Article>,
     pub current_article: Option<String>,
     pub selected_sidebar_index: usize,
-    pub unified_links: Vec<UnifiedLink>,
+    pub nav_links: Vec<NavLink>,
     pub infobox_link_count: usize,
     pub focused_link: Option<usize>,
 }
@@ -33,7 +33,7 @@ impl App{
             loaded_articles,
             current_article: None,
             selected_sidebar_index: 0,
-            unified_links: Vec::new(),
+            nav_links: Vec::new(),
             infobox_link_count: 0,
             focused_link: None,
         })
@@ -46,7 +46,7 @@ impl App{
                 .iter()
                 .position(|entry| matches!(entry, SidebarEntry::Article{ key, ..} if key == name)).unwrap();
             self.selected_sidebar_index = index;
-            self.build_unified_links();
+            self.build_nav_links();
             self.focused_link = None;
             Ok(())
         } else {
@@ -78,6 +78,31 @@ impl App{
         }
     }
 
+    pub fn cycle_link_next(&mut self){
+        if self.nav_links.is_empty(){
+            return;
+        }
+        match self.focused_link{
+            None => self.focused_link = Some(0),
+            Some(i) if i + 1 == self.nav_links.len() => self.focused_link = Some(0),
+            Some(i) => self.focused_link = Some(i + 1),
+        }
+    }
+
+    pub fn cycle_link_prev(&mut self){
+        if self.nav_links.is_empty(){
+            return;
+        }
+        match self.focused_link{
+            None | Some(0) => self.focused_link = Some(self.nav_links.len() - 1),
+            Some(i) => self.focused_link = Some(i - 1),
+        }
+    }
+
+    pub fn link_is_valid(&self, target: &str) -> bool{
+        self.loaded_articles.contains_key(target)
+    }
+
     pub fn sidebar_entries(&self) -> Vec<SidebarEntry>{
         let mut articles: Vec<(&String, &Article)> = self.loaded_articles.iter().collect();
         articles.sort_by(|(_,a), (_, b)| a.title.cmp(&b.title));
@@ -101,13 +126,13 @@ impl App{
         }
         entries
     }
-    pub fn build_unified_links(&mut self) {
+    pub fn build_nav_links(&mut self) {
         if self.current_article.is_none(){
-            self.unified_links = Vec::new();
+            self.nav_links = Vec::new();
             self.infobox_link_count = 0;
             return;
         }
-        let mut links: Vec<UnifiedLink> = Vec::new();
+        let mut links: Vec<NavLink> = Vec::new();
         let mut infobox_count: usize = 0;
         let key = self.current_article.as_ref().unwrap().clone();
         let article = self.loaded_articles.get(&key).unwrap();
@@ -118,7 +143,7 @@ impl App{
             for seg in segments_from_str(value) {
                 match seg{
                     Segment::Link{target, display} =>{
-                        links.push(UnifiedLink{target: target.clone(), source: LinkSource::InfboxFlatField, display: display.unwrap_or(target) })
+                        links.push(NavLink{target: target.clone(), source: LinkSource::InfboxFlatField, display: display.unwrap_or(target) })
                     },
                     _ => ()
                 }
@@ -129,13 +154,13 @@ impl App{
             if let Block::Paragraph {segments} = block{
                 for seg in segments{
                     if let Segment::Link{target, display} = seg{
-                        links.push(UnifiedLink{target: target.clone(), source: LinkSource::Body, display: display.unwrap_or(target) })
+                        links.push(NavLink{target: target.clone(), source: LinkSource::Body, display: display.unwrap_or(target) })
                     }
                 }
             }
         }
 
-        self.unified_links = links;
+        self.nav_links = links;
         self.infobox_link_count = infobox_count;
     }
 }

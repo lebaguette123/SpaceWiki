@@ -51,6 +51,12 @@ fn main() {
                    cleanup();
                    break;
                },
+               KeyCode::Left | KeyCode::Char('h') if key.kind == Press || key.kind == Repeat => {
+                   app.cycle_link_prev();
+               },
+               KeyCode::Right | KeyCode::Char('l') if key.kind == Press || key.kind == Repeat => {
+                   app.cycle_link_next();
+               }
                _ => ()
            }
        }

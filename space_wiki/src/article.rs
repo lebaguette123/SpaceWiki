@@ -36,7 +36,7 @@ pub fn load_article(path: &Path) -> Result<Article, String>{
         ("spacecraft", "cargo_capsule") => ArticleType::Spacecraft(SpacecraftSubtype::CargoCapsule),
         ("spacecraft", "lander") => ArticleType::Spacecraft(SpacecraftSubtype::Lander),
         ("spacecraft", "satellite") => ArticleType::Spacecraft(SpacecraftSubtype::Satellite),
-        ("spacecraft", "spacestation") => ArticleType::Spacecraft(SpacecraftSubtype::Spacestation),
+        ("spacecraft", "space_station") => ArticleType::Spacecraft(SpacecraftSubtype::Spacestation),
         ("spacecraft", "probe") => ArticleType::Spacecraft(SpacecraftSubtype::Probe),
         _ => return Err("Unknown type/subtype".to_string()),
     };

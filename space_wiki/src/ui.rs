@@ -20,7 +20,7 @@ pub fn draw(frame: &mut Frame, app: &App){
 
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Length(20), Constraint::Min(0)])
+        .constraints([Constraint::Length(24), Constraint::Min(0)])
         .split(area);
 
     let items: Vec<ListItem> = app.sidebar_entries()
@@ -78,16 +78,28 @@ pub fn draw(frame: &mut Frame, app: &App){
                 .constraints(std::iter::repeat(Constraint::Fill(1)).take(cols).collect::<Vec<_>>())
                 .split(main_chunks[1]);
 
+            let mut link_counter: usize = 0;
             for col_index in 0..cols{
                 let mut lines: Vec<Line> = Vec::new();
+
                 for (i, (label, value)) in article.infobox.fields.iter().enumerate(){
                     if i % cols == col_index{
-                        let spans: Vec<Span> =  segments_from_str(value)
-                            .into_iter()
-                            .map(|seg| match seg{
-                                Segment::Text(t) => Span::styled(t, Style::default().fg(Color::White)),
-                                Segment::Link{ target, display } => Span::styled(display.unwrap_or(target), Style::default().fg(Color::Cyan)),
-                            }).collect();
+                        let mut spans: Vec<Span> =  Vec::new();
+                        for seg in segments_from_str(value){
+                            match seg{
+                                Segment::Text(s) => spans.push(Span::styled(s, Style::default().fg(Color::DarkGray))),
+                                Segment::Link{ target, display } => {
+                                    let link = display.unwrap_or(target);
+                                    if app.focused_link == Some(link_counter){
+                                        spans.push(Span::styled(link, Style::default().fg(Color::Black).bg(Color::Cyan)))
+                                    }
+                                    else{
+                                        spans.push(Span::styled(link, Style::default().fg(Color::Cyan)))
+                                    }
+                                    link_counter += 1;
+                                }
+                            }
+                        }
                         if !value.is_empty(){
                             lines.push(Line::styled(label.replace("_", " ").to_uppercase(), Style::default().fg(Color::DarkGray)));
                             lines.push(Line::from(spans));
@@ -98,28 +110,41 @@ pub fn draw(frame: &mut Frame, app: &App){
                 frame.render_widget(par, infobox_chunks[col_index]);
             }
 
-            let body: Vec<Line> = article.body.blocks
-                .iter()
-                .map(|block| match block{
+            let mut body: Vec<Line> = Vec::new();
+            let mut link_counter: usize = app.infobox_link_count;
+            for block in &article.body.blocks{
+                match block{
                     Block::Heading { level, text } =>{
                         let style = match level{
                             1 => Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
                             2 => Style::default().fg(Color::Gray).add_modifier(Modifier::BOLD),
                             _ => Style::default().fg(Color::DarkGray).add_modifier(Modifier::BOLD),
                         };
-                        Line::styled(text, style)
+                        body.push(Line::styled(text, style))
                     },
                     Block::Paragraph { segments } => {
-                        let text = segments.iter().map(|seg| match seg{
-                            Segment::Text(s) => Span::styled(s, Style::default().fg(Color::DarkGray)),
-                            Segment::Link{ target, display } => {
-                                let link = display.as_deref().unwrap_or(target);
-                                Span::styled(link, Style::default().fg(Color::Cyan))
+                        let mut text: Vec<Span> = Vec::new();
+                        for seg in segments.iter(){
+                            match seg{
+                                Segment::Text(s) => text.push(Span::styled(s, Style::default().fg(Color::DarkGray))),
+                                Segment::Link{ target, display } => {
+                                    let link = display.as_deref().unwrap_or(target);
+                                    if app.focused_link == Some(link_counter){
+                                        text.push(Span::styled(link, Style::default().fg(Color::Black).bg(Color::Cyan)))
+                                    }
+                                    else{
+                                        text.push(Span::styled(link, Style::default().fg(Color::Cyan)))
+                                    }
+                                    link_counter += 1;
+                                }
                             }
-                        }).collect::<Vec<Span>>();
-                        Line::from(text)
+
+                        }
+                        body.push(Line::from(text))
                     }
-            }).collect();
+                }
+            }
+
             let body_widget = Paragraph::new(body);
             frame.render_widget(body_widget, main_chunks[2]);
         }

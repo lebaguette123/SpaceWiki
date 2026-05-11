@@ -1,0 +1,18 @@
+[meta]
+title = "Space Launch System"
+type = "launch_vehicle"
+subtype = "heavy_lift"
+
+[infobox]
+first_flight = "2022-11-16"
+manufacturer = "NASA"
+cost_unit = "$2B"
+predecessor = "[[Space Shuttle]]"
+successor = ""
+country = "United States"
+
+[body]
+text = """# Overview
+The Space Launch System (SLS) is an American super heavy-lift expendable launch vehicle developed by NASA.
+It is designed to be the primary launch vehicle for NASA's deep space exploration missions, including crewed missions to the Moon and Mars.
+"""

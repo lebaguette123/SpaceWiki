@@ -1,0 +1,19 @@
+[meta]
+title = "CST-100 Starliner"
+type = "spacecraft"
+subtype = "crew_capsule"
+
+[infobox]
+first_flight = "2019-12-20"
+manufacturer = "Boeing"
+cost_unit = "$1B"
+predecessor = ""
+successor = ""
+country = "United States"
+
+[body]
+text = """
+# Overview
+The CST-100 Starliner is a crewed spacecraft developed by Boeing as part of NASA's Commercial Crew Program.
+It is designed to transport astronauts to and from the International Space Station (ISS).
+"""
