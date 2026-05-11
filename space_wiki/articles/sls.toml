@@ -7,7 +7,7 @@ subtype = "heavy_lift"
 first_flight = "2022-11-16"
 manufacturer = "NASA"
 cost_unit = "$2B"
-predecessor = "[[Space Shuttle]]"
+predecessor = "[[space-shuttle|Space Shuttle]]"
 successor = ""
 country = "United States"
 

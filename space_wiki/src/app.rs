@@ -1,8 +1,8 @@
 use std::fs::read_dir;
-use std::collections::HashMap;
+use std::collections::{VecDeque,HashMap};
 use crate::types::{Article, ArticleType, Block, EngineSubtype, LaunchVehicleSubtype, Segment, SidebarEntry, SpacecraftSubtype};
 use crate::article::load_article;
-use crate::link::{LinkSource, NavLink};
+use crate::link::{self, LinkSource, NavLink};
 use crate::parser::segments_from_str;
 
 pub struct App{
@@ -12,6 +12,7 @@ pub struct App{
     pub nav_links: Vec<NavLink>,
     pub infobox_link_count: usize,
     pub focused_link: Option<usize>,
+    pub history: VecDeque<String>,
 }
 impl App{
     pub fn new() -> Result<App, Box<dyn std::error::Error>>{
@@ -36,11 +37,17 @@ impl App{
             nav_links: Vec::new(),
             infobox_link_count: 0,
             focused_link: None,
+            history: VecDeque::new(),
         })
     }
 
     pub fn open_article(&mut self, name: &str) -> Result<(), String>{
         if self.loaded_articles.contains_key(name){
+            if let Some(art) = &self.current_article{
+                if name != art{
+                    self.history.push_back(art.clone());
+                }
+            }
             self.current_article = Some(name.to_string());
             let index = self.sidebar_entries()
                 .iter()
@@ -162,6 +169,19 @@ impl App{
 
         self.nav_links = links;
         self.infobox_link_count = infobox_count;
+    }
+
+    pub fn go_back(&mut self){
+        if let Some(prev) = self.history.pop_back(){
+            self.open_article(&prev).ok();
+        }
+    }
+
+    pub fn follow_focused_link(&mut self){
+        if let Some(idx) = self.focused_link{
+            let target = self.nav_links[idx].target.clone();
+            self.open_article(&target).ok();
+        }
     }
 }
 

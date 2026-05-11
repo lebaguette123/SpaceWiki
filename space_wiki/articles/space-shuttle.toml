@@ -8,7 +8,7 @@ first_flight = "1981-04-12"
 manufacturer = "Rockwell Intl."
 cost_unit = "$1.5B"
 predecessor = "[[Saturn V]]"
-successor = "[[SLS]]"
+successor = "[[sls|SLS]]"
 country = "United States"
 
 [body]

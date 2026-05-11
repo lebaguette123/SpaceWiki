@@ -41,11 +41,19 @@ fn main() {
                    app.move_sidebar_down();
                },
                KeyCode::Enter =>{
-                   let art = &app.sidebar_entries()[app.selected_sidebar_index];
-                   match art{
-                       SidebarEntry::Article{ key, .. } => app.open_article(key.as_str()).unwrap(),
-                       _ => ()
+                   match app.focused_link{
+                    Some(_) => app.follow_focused_link(),
+                    None => {
+                        let art = &app.sidebar_entries()[app.selected_sidebar_index];
+                        match art{
+                            SidebarEntry::Article{ key, .. } => app.open_article(key.as_str()).unwrap(),
+                            _ => ()
+                        }
+                    }
                    }
+               },
+               KeyCode::Backspace =>{
+                app.go_back();
                },
                KeyCode::Char('q') => {
                    cleanup();
