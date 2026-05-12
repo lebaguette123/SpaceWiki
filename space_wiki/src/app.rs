@@ -42,21 +42,17 @@ impl App{
     }
 
     pub fn open_article(&mut self, name: &str) -> Result<(), String>{
-        if self.loaded_articles.contains_key(name){
-            if let Some(art) = &self.current_article{
-                if name != art{
-                    self.history.push_back(art.clone());
+        let art = self.current_article.clone();
+        if self.navigate_to(name).is_ok(){
+            if let Some(title) = art{
+                if name != title{
+                    self.history.push_back(title.to_string());
+
                 }
             }
-            self.current_article = Some(name.to_string());
-            let index = self.sidebar_entries()
-                .iter()
-                .position(|entry| matches!(entry, SidebarEntry::Article{ key, ..} if key == name)).unwrap();
-            self.selected_sidebar_index = index;
-            self.build_nav_links();
-            self.focused_link = None;
             Ok(())
-        } else {
+        }
+        else{
             Err("Article not found".to_string())
         }
     }
@@ -173,7 +169,7 @@ impl App{
 
     pub fn go_back(&mut self){
         if let Some(prev) = self.history.pop_back(){
-            self.open_article(&prev).ok();
+            self.navigate_to(&prev).ok();
         }
     }
 
@@ -181,6 +177,20 @@ impl App{
         if let Some(idx) = self.focused_link{
             let target = self.nav_links[idx].target.clone();
             self.open_article(&target).ok();
+        }
+    }
+    fn navigate_to(&mut self, name: &str)->Result<(), String>{
+        if self.loaded_articles.contains_key(name){
+            self.current_article = Some(name.to_string());
+            let index = self.sidebar_entries()
+                .iter()
+                .position(|entry| matches!(entry, SidebarEntry::Article{ key, ..} if key == name)).unwrap();
+            self.selected_sidebar_index = index;
+            self.build_nav_links();
+            self.focused_link = None;
+            Ok(())
+        } else {
+            Err("Article not found".to_string())
         }
     }
 }
