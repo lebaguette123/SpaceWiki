@@ -64,7 +64,9 @@ fn main() {
                },
                KeyCode::Right | KeyCode::Char('l') if key.kind == Press || key.kind == Repeat => {
                    app.cycle_link_next();
-               }
+               },
+               KeyCode::Char('[') if key.kind == Press => app.jump_to_prev_type_heading(),
+               KeyCode::Char(']') if key.kind == Press => app.jump_to_next_type_heading(),
                _ => ()
            }
        }

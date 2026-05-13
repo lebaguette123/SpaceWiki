@@ -13,6 +13,7 @@ pub struct App{
     pub infobox_link_count: usize,
     pub focused_link: Option<usize>,
     pub history: VecDeque<String>,
+    pub sidebar_scroll_offset: usize,
 }
 impl App{
     pub fn new() -> Result<App, Box<dyn std::error::Error>>{
@@ -38,6 +39,7 @@ impl App{
             infobox_link_count: 0,
             focused_link: None,
             history: VecDeque::new(),
+            sidebar_scroll_offset: 0,
         })
     }
 
@@ -170,6 +172,63 @@ impl App{
     pub fn go_back(&mut self){
         if let Some(prev) = self.history.pop_back(){
             self.navigate_to(&prev).ok();
+        }
+    }
+
+    pub fn jump_to_next_type_heading(&mut self){
+        let entries = self.sidebar_entries();
+        let len = entries.len();
+        if len == 0 { return; }
+
+        let mut heading_pos: Option<usize> = None;
+        for offset in 1..=len{
+            let i = (self.selected_sidebar_index + offset) % len;
+            if matches!(entries[i], SidebarEntry::TypeHeading(_)) {
+                heading_pos = Some(i);
+                break;
+            }
+        }
+        if let Some(pos) = heading_pos{
+            for offset in 1..=len{
+                let i = (pos + offset) % len;
+                if matches!(entries[i], SidebarEntry::Article{..}) {
+                    self.selected_sidebar_index = i;
+                    break;
+                }
+            }
+        }
+    }
+
+    pub fn jump_to_prev_type_heading(&mut self){
+        let entries = self.sidebar_entries();
+        let len = entries.len();
+        if len == 0 { return; }
+        let mut current_heading_pos: Option<usize> = None;
+        for offset in 1..=len{
+            let i = (self.selected_sidebar_index + len - offset) % len;
+            if matches!(entries[i], SidebarEntry::TypeHeading(_)) {
+                current_heading_pos = Some(i);
+                break;
+            }
+        }
+        let mut heading_pos: Option<usize> = None;
+        if let Some(current_pos) = current_heading_pos{
+            for offset in 1..=len{
+                let i = (current_pos + len - offset) % len;
+                if matches!(entries[i], SidebarEntry::TypeHeading(_)) {
+                    heading_pos = Some(i);
+                    break;
+                }
+            }
+        }
+        if let Some(pos) = heading_pos{
+            for offset in 1..=len{
+                let i = (pos + offset) % len;
+                if matches!(entries[i], SidebarEntry::Article{..}) {
+                    self.selected_sidebar_index = i;
+                    break;
+                }
+            }
         }
     }
 
