@@ -67,6 +67,7 @@ fn main() {
                },
                KeyCode::Char('[') if key.kind == Press => app.jump_to_prev_type_heading(),
                KeyCode::Char(']') if key.kind == Press => app.jump_to_next_type_heading(),
+               KeyCode::Esc if key.kind == Press => app.focused_link = None,
                _ => ()
            }
        }

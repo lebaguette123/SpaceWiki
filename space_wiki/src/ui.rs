@@ -1,5 +1,5 @@
 use ratatui::Frame;
-use ratatui::layout::{Constraint, Layout};
+use ratatui::layout::{Alignment, Constraint, Layout, Rect};
 use ratatui::prelude::Direction;
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span, Text};
@@ -34,7 +34,7 @@ pub fn draw(frame: &mut Frame, app: &App){
         .split(sidebar_inner);
 
 
-    let sidebar_title = Paragraph::new(Text::styled(" WIKI", Style::default().fg(Color::DarkGray)))
+    let sidebar_title = Paragraph::new(Text::styled(" ARTICLE LIST", Style::default().fg(Color::DarkGray)))
         .block(Block::default().borders(Borders::BOTTOM).border_style(Style::default().fg(Color::DarkGray)));
     frame.render_widget(sidebar_title, sidebar_chunks[0]);
 
@@ -87,18 +87,47 @@ pub fn draw(frame: &mut Frame, app: &App){
     let infobox_height = (rows * 2 + 2) as u16;
 
 
+    const SPLASH_ART: &str = r#"███████╗██████╗  █████╗  ██████╗███████╗    ██╗    ██╗██╗██╗  ██╗██╗
+    ██╔════╝██╔══██╗██╔══██╗██╔════╝██╔════╝    ██║    ██║██║██║ ██╔╝██║
+    ███████╗██████╔╝███████║██║     █████╗      ██║ █╗ ██║██║█████╔╝ ██║
+    ╚════██║██╔═══╝ ██╔══██║██║     ██╔══╝      ██║███╗██║██║██╔═██╗ ██║
+    ███████║██║     ██║  ██║╚██████╗███████╗    ╚███╔███╔╝██║██║  ██╗██║
+    ╚══════╝╚═╝     ╚═╝  ╚═╝ ╚═════╝╚══════╝     ╚══╝╚══╝ ╚═╝╚═╝  ╚═╝╚═╝"#;
     let main_block = Block::default().borders(Borders::ALL)
         .border_type(BorderType::Rounded)
         .border_style(Style::default().fg(Color::DarkGray));
     let main_inner = main_block.inner(chunks[1]);
     frame.render_widget(main_block, chunks[1]);
-    let main_chunks = Layout::default()
+    
+    if app.current_article.is_none(){
+        let splash_screen_chunk = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(2), Constraint::Length(infobox_height), Constraint::Min(0)])
+        .constraints([Constraint::Length(7), Constraint::Min(0)])
         .split(main_inner);
-
-    if let Some(key) = &app.current_article{
+        let logo_lines: Vec<Line> = SPLASH_ART
+        .lines()
+        .map(|l| {
+            let cleaned = l.trim_matches(|c: char| c.is_whitespace()); 
+            Line::from(Span::raw(cleaned))
+        })
+        .collect();
+        let splash = Paragraph::new(logo_lines)
+        .style(Style::default().fg(Color::Rgb(100, 160, 225)))
+        .alignment(Alignment::Center);
+        frame.render_widget(splash, splash_screen_chunk[0]);
+        let splash_intro = Paragraph::new(vec![
+            Line::styled("A terminal-based wiki for rockets, spacecraft, and engines.", Style::default().fg(Color::Gray)),
+            Line::raw(""),
+            Line::styled("Select an article from the sidebar with (enter) and (j/k) to begin.", Style::default().fg(Color::Rgb(60,60,60))),
+        ]).alignment(Alignment::Center);
+        frame.render_widget(splash_intro, splash_screen_chunk[1]);
+    }
+    else if let Some(key) = &app.current_article{
         if let Some(article) = app.loaded_articles.get(key){
+            let main_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Length(2), Constraint::Length(infobox_height), Constraint::Min(0)])
+            .split(main_inner);
             let (t, st) = type_display_pretty(&article.article_type);
             let title_line = Line::from(vec![
                 Span::styled(format!(" {}", &article.title), Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
