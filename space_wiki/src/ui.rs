@@ -133,7 +133,7 @@ pub fn draw(frame: &mut Frame, app: &App){
     else if let Some(key) = &app.current_article{
         if let Some(article) = app.loaded_articles.get(key){
             let usable_width = main_inner.width.saturating_sub(2);
-            let cols = (usable_width / 25).max(1) as usize;
+            let cols = (usable_width / 18).max(1) as usize;
             let stages_per_row = (usable_width / 40).max(1) as usize;
             let mut all_fields = Vec::new();
             for table in &article.infobox.subtables {
