@@ -10,58 +10,58 @@ A terminal user interface (TUI) wiki in Rust about rockets, launch vehicles, eng
 
 - **Language**: Rust, edition 2021
 - **TUI**: `ratatui = "0.30"`, `crossterm = "0.29"`
-- **Serialization**: `serde = "1.0"` with derive, `toml = "0.8"`
+- **Serialization**: `toml = "0.8"` (generic `toml::Value` tree; not using serde derive)
 
 ---
 
 ## Implementation Roadmap
 
 ### Phase 1: Core Infrastructure
-- [ ] Project structure and `Cargo.toml` setup
-- [ ] Terminal initialization and event loop
-- [ ] Basic TUI rendering with `ratatui`
-- [ ] Graceful teardown and quit functionality
+- [x] Project structure and `Cargo.toml` setup
+- [x] Terminal initialization and event loop
+- [x] Basic TUI rendering with `ratatui`
+- [x] Graceful teardown and quit functionality
 
 ### Phase 2: Article System
-- [ ] Define article types and data structures
-- [ ] TOML file loading and parsing with error handling
-- [ ] Article storage in a `HashMap<String, Article>`
-- [ ] Type-based organization (Engine, LaunchVehicle, Spacecraft)
+- [x] Define article types and data structures
+- [x] TOML file loading and parsing with error handling
+- [x] Article storage in a `HashMap<String, Article>`
+- [x] Type-based organization (Engine, LaunchVehicle, Spacecraft)
 
 ### Phase 3: Parser & Content Processing
-- [ ] Markdown-like body text parser (headings with `#`/`##`/`###`)
-- [ ] Link syntax parser (`[[link]]` and `[[link|label]]`)
-- [ ] Infobox field parsing (flat fields, subtables with styling, stages)
-- [ ] Body text rendering into `Segment` enum (`Text` or `Link`)
+- [x] Markdown-like body text parser (headings with `#`/`##`/`###`)
+- [x] Link syntax parser (`[[link]]` and `[[link|label]]`)
+- [x] Infobox field parsing (flat fields, subtables with styling, stages)
+- [x] Body text rendering into `Segment` enum (`Text` or `Link`)
 
 ### Phase 4: Sidebar Navigation
-- [ ] Group articles by type heading (e.g., `ENGINES`)
-- [ ] Subtype grouping (e.g., `CRYOGENIC`)
-- [ ] Arrow navigation (`↑↓` / `j/k`) through sidebar entries
-- [ ] Visual indicator (`▶`) for currently open article
-- [ ] Highlight on selected entry
+- [x] Group articles by type heading (e.g., `ENGINES`)
+- [x] Subtype grouping (e.g., `CRYOGENIC`)
+- [x] Arrow navigation (`↑↓` / `j/k`) through sidebar entries
+- [x] Visual indicator (`▶`) for currently open article
+- [x] Highlight on selected entry
 
 ### Phase 5: Main Display Area
-- [ ] Layout: title bar + infobox + body (stacked vertically)
-- [ ] Title bar showing article name and metadata
-- [ ] Infobox rendering with flat fields, subtables, and stages
-- [ ] Body text rendering with headings and paragraphs
-- [ ] Minimum terminal size check with fallback message
+- [x] Layout: title bar + infobox + body (stacked vertically)
+- [x] Title bar showing article name and metadata
+- [x] Infobox rendering with flat fields, subtables, and stages
+- [x] Body text rendering with headings and paragraphs
+- [x] Minimum terminal size check with fallback message
 
 ### Phase 6: Link Handling & Unified List
-- [ ] Build unified link list from infobox flat fields (ordered), stages, then body
-- [ ] Track `infobox_link_count()` for rendering boundary
-- [ ] Link validation (check if target article exists)
-- [ ] Link cycling with `←→` / `h/l` navigation
-- [ ] Visual focus indication (Black on Cyan highlight)
+- [x] Build unified link list from infobox flat fields (ordered), stages, then body
+- [x] Track `infobox_link_count()` for rendering boundary
+- [x] Link validation (check if target article exists)
+- [x] Link cycling with `←→` / `h/l` navigation
+- [x] Visual focus indication (Black on Cyan highlight)
 
 ### Phase 7: Navigation & History
-- [ ] History stack for visited articles (with max size limit)
-- [ ] `Backspace` to go back in history
-- [ ] `[`/`]` to jump between type headings
-- [ ] Type/subtype headings as category pages
-- [ ] `Enter` to open/follow focused link
-- [ ] Scroll state management (sidebar + body independent)
+- [x] History stack for visited articles (simple `VecDeque`, no max size limit yet)
+- [x] `Backspace` to go back in history
+- [x] `[`/`]` to jump between type headings
+- [x] Type/subtype headings used for grouping; category pages not separately implemented
+- [x] `Enter` to open/follow focused link
+- [ ] Scroll state management (sidebar + body independent) — NOT YET IMPLEMENTED
 
 ### Phase 8: Advanced Features
 - [ ] Tab sidebar modes: Sections / On This Page / History
@@ -71,6 +71,8 @@ A terminal user interface (TUI) wiki in Rust about rockets, launch vehicles, eng
 - [ ] Broken link detection and dimmed rendering
 - [ ] Body text scrolling with independent scroll offset
 - [ ] Sidebar scrolling with independent scroll offset
+
+Notes: Infobox subtables and stages (Phase 8 content) are implemented and rendered in `ui.rs`, but the sidebar modes, status bar, broken-link UI, and explicit scroll offsets are not yet implemented.
 
 ---
 
