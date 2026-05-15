@@ -76,10 +76,3 @@ pub enum SidebarEntry {
     SubtypeHeading(String),
     Article{ title: String, key: String },
 }
-
-#[allow(dead_code)]
-pub enum SidebarMode {
-    Sections,
-    OnThisPage,
-    History,
-}
