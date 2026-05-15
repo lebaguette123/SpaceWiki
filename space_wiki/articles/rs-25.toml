@@ -3,7 +3,7 @@ title = "RS-25"
 type = "engine"
 subtype = "cryogenic"
 
-[infobox]
+[infobox.main]
 first_flight = "1981-04-12"
 manufacturer = "Rocketdyne"
 cost_unit = "$40M"

@@ -3,7 +3,7 @@ title = "Space Launch System"
 type = "launch_vehicle"
 subtype = "heavy_lift"
 
-[infobox]
+[infobox.main]
 first_flight = "2022-11-16"
 manufacturer = "NASA"
 cost_unit = "$2B"

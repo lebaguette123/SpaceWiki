@@ -13,7 +13,6 @@ pub struct App{
     pub infobox_link_count: usize,
     pub focused_link: Option<usize>,
     pub history: VecDeque<String>,
-    pub sidebar_scroll_offset: usize,
 }
 impl App{
     pub fn new() -> Result<App, Box<dyn std::error::Error>>{
@@ -39,7 +38,6 @@ impl App{
             infobox_link_count: 0,
             focused_link: None,
             history: VecDeque::new(),
-            sidebar_scroll_offset: 0,
         })
     }
 
@@ -132,34 +130,73 @@ impl App{
         entries
     }
     pub fn build_nav_links(&mut self) {
-        if self.current_article.is_none(){
+        let Some(key) = &self.current_article else{
             self.nav_links = Vec::new();
             self.infobox_link_count = 0;
             return;
-        }
+        };
+
+        let Some(article) = self.loaded_articles.get(key) else { return; };
+
         let mut links: Vec<NavLink> = Vec::new();
         let mut infobox_count: usize = 0;
-        let key = self.current_article.as_ref().unwrap().clone();
-        let article = self.loaded_articles.get(&key).unwrap();
-        let fields = article.infobox.fields.clone();
-        let body = article.body.blocks.clone();
 
-        for (_, value) in fields.iter(){
-            for seg in segments_from_str(value) {
-                match seg{
-                    Segment::Link{target, display} =>{
-                        links.push(NavLink{target: target.clone(), source: LinkSource::InfboxFlatField, display: display.unwrap_or(target) })
-                    },
-                    _ => ()
+        for table in &article.infobox.subtables{
+            for value in table.fields.values(){
+                for seg in segments_from_str(value){
+                    if let Segment::Link {target, display} = seg{
+                        links.push(NavLink{
+                           display: display.unwrap_or_else(|| target.clone()),
+                            target,
+                            source: LinkSource::InfboxFlatField,
+                        });
+                    }
                 }
             }
         }
+
+        for stage in &article.infobox.stages{
+            if let Segment::Link {target, display} = &stage.name{
+                links.push(NavLink{
+                   display: display.clone().unwrap_or_else(|| target.clone()),
+                    target: target.clone(),
+                    source: LinkSource::InfboxStage,
+                });
+            }
+
+            for seg in &stage.description{
+                if let Segment::Link {target, display} = seg{
+                    links.push(NavLink{
+                       display: display.clone().unwrap_or_else(|| target.clone()),
+                        target: target.clone(),
+                        source: LinkSource::InfboxStage,
+                    });
+                }
+            }
+
+            for engine_group in &stage.engines{
+                for seg in engine_group{
+                    if let Segment::Link {target, display} = seg{
+                        links.push(NavLink{
+                           display: display.clone().unwrap_or_else(|| target.clone()),
+                            target: target.clone(),
+                            source: LinkSource::InfboxStage,
+                        });
+                    }
+                }
+            }
+        }
+
         infobox_count = links.len();
-        for block in body{
+        for block in &article.body.blocks{
             if let Block::Paragraph {segments} = block{
                 for seg in segments{
                     if let Segment::Link{target, display} = seg{
-                        links.push(NavLink{target: target.clone(), source: LinkSource::Body, display: display.unwrap_or(target) })
+                        links.push(NavLink{
+                            target: target.clone(),
+                            source: LinkSource::Body,
+                            display: display.clone().unwrap_or_else(|| target.clone())
+                        })
                     }
                 }
             }

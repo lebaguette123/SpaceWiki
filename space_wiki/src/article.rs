@@ -1,8 +1,8 @@
-use crate::types::{Article, ArticleType, Infobox, EngineSubtype, LaunchVehicleSubtype, SpacecraftSubtype};
+use crate::types::{Article, ArticleType, Infobox, EngineSubtype, LaunchVehicleSubtype, SpacecraftSubtype, Table, Segment, Stage};
 use std::fs::read_to_string;
 use std::path::Path;
 use indexmap::IndexMap;
-use crate::parser::parse_body;
+use crate::parser::{parse_body, segments_from_str};
 
 pub fn load_article(path: &Path) -> Result<Article, String>{
     let contents = read_to_string(path).map_err(|e| e.to_string())?;
@@ -41,18 +41,67 @@ pub fn load_article(path: &Path) -> Result<Article, String>{
         _ => return Err("Unknown type/subtype".to_string()),
     };
 
-    let infobox = value.get("infobox")
-        .and_then(|i| i.as_table())
-        .ok_or("Missing infobox".to_string())?;
-    let mut fields = IndexMap::new();
-    for(key, val) in infobox.iter(){
-        if let Some(s) = val.as_str(){
-            fields.insert(key.clone(), s.to_string());
+    let mut subtables = Vec::new();
+    let mut stages = Vec::new();
 
+    if let Some(infobox_root) = value.get("infobox").and_then(|v| v.as_table()){
+        for (name, content) in infobox_root{
+            if let Some(fields_table) = content.as_table(){
+                let mut fields = IndexMap::new();
+
+                for (k, v) in fields_table{
+                    if let Some(val_str) = v.as_str(){
+                        fields.insert(k.clone(), val_str.to_string());
+                    }
+                }
+
+                subtables.push(Table{
+                    title: name.clone(),
+                    fields,
+                });
+            }
         }
     }
+
+    if let Some(stage_root) = value.get("stage").and_then(|v| v.as_table()){
+        for(number_key, content) in stage_root{
+            if let Some(s) = content.as_table(){
+
+                let number = number_key.parse::<usize>().map_err(|_| format!("Stage header [{}] must be a number", number_key))?;
+                let name_str = s.get("name")
+                    .and_then(|v| v.as_str())
+                    .unwrap_or("Unknown Stage");
+                let name = segments_from_str(name_str)
+                    .into_iter()
+                    .next()
+                    .unwrap_or(Segment::Text(name_str.to_string()));
+                let description = s.get("description")
+                    .and_then(|v| v.as_str())
+                    .map(segments_from_str)
+                    .unwrap_or_default();
+                let engines = s.get("engines").and_then(|v| v.as_str()).map(|e_str|{
+                    e_str.split('•')
+                        .map(|part| segments_from_str(part.trim()))
+                        .collect()
+                }).unwrap_or_default();
+
+                stages.push(Stage{
+                    number,
+                    name,
+                    description,
+                    engines,
+                    propellant: s.get("propellant").and_then(|v| v.as_str()).unwrap_or("").to_string(),
+                    bespoke: s.get("bespoke").and_then(|v| v.as_bool()).unwrap_or(false)
+                });
+            }
+        }
+    }
+
+    stages.sort_by_key(|s| s.number);
+
     let infobox = Infobox{
-        fields,
+        subtables,
+        stages,
     };
 
     let body = value.get("body")

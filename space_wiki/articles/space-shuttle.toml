@@ -3,13 +3,33 @@ title = "Space Shuttle"
 type = "launch_vehicle"
 subtype = "heavy_lift"
 
-[infobox]
+[infobox.main]
 first_flight = "1981-04-12"
 manufacturer = "Rockwell Intl."
 cost_unit = "$1.5B"
 predecessor = "[[Saturn V]]"
 successor = "[[sls|SLS]]"
 country = "United States"
+
+[stage.1]
+name = "External Tank"
+description = "Contained liquid hydrogen and liquid oxygen propellants for the main engines. Discarded after use."
+propellant = "LH2/LOX"
+bespoke = true
+
+[stage.2]
+name = "Solid Rocket Boosters"
+description = "Provided additional thrust during the first two minutes of flight. Reusable."
+engines = "SRBs x2"
+propellant = "APCP"
+bespoke = false
+
+[stage.3]
+name = "Space Shuttle Orbiter"
+description = "Crewed vehicle, carried payload in cargo bay. Reusable."
+engines = "[[rs-25|RS-25]] x3  • [[oms|OMS]] x2"
+propellant = "LH2/LOX (RS-25) • MMH/N2O4 (OMS)"
+bespoke = true
 
 [body]
 text = """

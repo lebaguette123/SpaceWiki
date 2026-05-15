@@ -3,7 +3,7 @@ title = "CST-100 Starliner"
 type = "spacecraft"
 subtype = "crew_capsule"
 
-[infobox]
+[infobox.main]
 first_flight = "2019-12-20"
 manufacturer = "Boeing"
 cost_unit = "$1B"

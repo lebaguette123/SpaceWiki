@@ -7,8 +7,21 @@ pub struct Article{
     pub body: Document,
 }
 
-pub struct Infobox{
+pub struct Stage{
+    pub number: usize,
+    pub name: Segment,
+    pub description: Vec<Segment>,
+    pub engines: Vec<Vec<Segment>>,
+    pub propellant: String,
+    pub bespoke: bool,
+}
+pub struct Table{
+    pub title: String,
     pub fields: IndexMap<String, String>,
+}
+pub struct Infobox{
+    pub subtables: Vec<Table>,
+    pub stages: Vec<Stage>,
 }
 
 pub struct Document{
