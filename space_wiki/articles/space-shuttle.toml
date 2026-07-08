@@ -36,4 +36,85 @@ text = """
 # Overview
 The Space Shuttle was a partially reusable low Earth orbital spacecraft system operated by NASA from 1981 to 2011.
 It was the first orbital spacecraft designed for reuse, and it carried astronauts and cargo to and from low Earth orbit.
+The program revolutionized spaceflight by introducing the first orbital spacecraft capable of carrying crew and cargo
+in a single vehicle, returning to Earth for reuse, and operating from conventional runways like an aircraft.
+
+## Development and History
+The Space Shuttle program began in the late 1960s as a concept to reduce the cost of space access through reusability.
+Following the success of the [[Apollo|Apollo program]], NASA sought a more economical approach to space transportation.
+The design evolved through numerous studies and trade-offs, ultimately resulting in the distinctive orbiter design with
+external tank and solid rocket boosters. The first orbital test flight, STS-1 in April 1981, demonstrated the feasibility
+of the reusable spacecraft concept. Over the next three decades, the Space Shuttle fleet completed 135 missions, setting
+numerous records and serving as the primary means for constructing and servicing the International Space Station.
+
+## Technical Specifications
+The Space Shuttle orbiter was approximately 37 meters long with a wingspan of 24 meters, similar in size to a commercial
+DC-9 aircraft. The vehicle could carry up to 27,500 kilograms of payload to low Earth orbit at an altitude of 185-643
+kilometers. Three main [[rs-25|RS-25]] engines provided thrust during the main propulsion phase, while two smaller OMS
+(Orbital Maneuvering System) engines allowed orbital insertion and de-orbit burns. The external tank contained approximately
+1.6 million kilograms of cryogenic propellants—liquid hydrogen and liquid oxygen—which were consumed during the 8.5-minute
+main engine burn. The solid rocket boosters, each capable of producing 11.2 meganewtons of thrust, were recovered downrange
+and refurbished for subsequent missions, achieving true reusability.
+
+## Mission Capabilities
+The Space Shuttle was designed as a versatile space transportation system capable of executing diverse mission profiles.
+It could deploy satellites, repair orbital assets, conduct scientific experiments, and transport crews and supplies to orbiting
+space stations. The vehicle's large cargo bay (4.6 meters by 18.3 meters) allowed it to carry various payloads including the
+Hubble Space Telescope, planetary probes, and construction modules for the International Space Station. The manipulator arm,
+known as the Remote Manipulator System, provided precise positioning and retrieval capabilities for on-orbit operations.
+The Spacelab module, carried in the cargo bay, served as an orbiting laboratory for materials science and scientific research.
+
+## Notable Achievements
+Throughout its operational history, the Space Shuttle program achieved numerous milestones. It deployed the Hubble Space
+Telescope in 1990 and conducted multiple servicing missions that enhanced its capabilities and corrected optical flaws.
+The program played a crucial role in constructing the International Space Station, delivering modules, equipment, and supplies
+that transformed it from concept to operational outpost. Several Space Shuttle missions deployed planetary rovers and orbiters,
+contributing to our exploration of Mars. The orbiter Endeavour, one of the finest spacecraft ever built, was the last to fly,
+launching on mission STS-135 in July 2011. The program conducted critical scientific research spanning decades, including
+the deployment of the Chandra X-ray Observatory and numerous Earth observation missions.
+
+## Challenges and Safety
+The Space Shuttle program experienced two catastrophic failures that profoundly affected the program and aerospace engineering
+practices. The loss of Challenger in 1986 revealed failures in organizational decision-making and engineering oversight, while
+the loss of Columbia in 2003 highlighted vulnerability to thermal protection system damage during ascent. Both accidents claimed
+the lives of 14 astronauts and seven space shuttle crew members respectively. These tragedies led to comprehensive safety reviews,
+design modifications, and significant changes to mission planning and approval processes. The program's later flights incorporated
+enhanced safety procedures including on-orbit inspections and repair capabilities for thermal protection system damage.
+
+## Operational Flight Profile
+A typical Space Shuttle mission began with vertical launch from Kennedy Space Center in Florida. The two solid rocket boosters
+burned for approximately two minutes, providing initial thrust and carrying the vehicle to an altitude of 45 kilometers. At booster
+separation, the three main engines continued to operate for approximately six and a half minutes more, accelerating the vehicle
+to orbital velocity. The external tank was jettisoned shortly after main engine cutoff, following a brief ballistic arc before
+breaking apart in the upper atmosphere. Once in orbit, the crew could conduct various payload operations, which might last from
+one day to 17 days depending on mission duration and consumables. The return to Earth began with an OMS burn to reduce velocity,
+re-entry into the upper atmosphere at Mach 25, and a gliding descent to a designated runway landing site.
+
+## International Cooperation
+The Space Shuttle program fostered international cooperation in space exploration and technology exchange. Crews included astronauts
+and specialists from numerous nations including Canada, France, Germany, Italy, Japan, and Saudi Arabia. The program facilitated
+delivery of components and modules from international partners for the ISS. Spacelab missions included scientific personnel from
+European and Japanese institutions. The Space Shuttle's capacity to serve as an orbital ferry and laboratory platform strengthened
+international bonds and demonstrated the feasibility of collaborative space programs. This cooperation established patterns of
+international partnership that continue in modern space exploration endeavors.
+
+## Legacy and Impact
+The Space Shuttle program demonstrated both the potential and limitations of reusable spacecraft systems. While it successfully
+operated for 30 years and completed 135 missions, the actual costs of operations and refurbishment were substantially higher than
+original projections. Nevertheless, its accomplishments in satellite deployment, space station construction, and scientific research
+remain unmatched. The program trained generations of astronauts and flight controllers, many of whom continue in space exploration
+activities. The lessons learned from Space Shuttle operations, both successes and failures, informed the design and philosophy of
+subsequent spacecraft including commercial crew vehicles. The orbiter Discovery, Atlantis, and Endeavour are now preserved as museum
+pieces, serving to inspire future generations of engineers and astronauts. The program's legacy extends beyond its missions to influence
+how the aerospace industry approaches reusable spacecraft design, reliability, and human spaceflight operations.
+
+## Retirement and Future
+The final Space Shuttle mission, STS-135 aboard Atlantis, launched on July 8, 2011, and landed on July 21, 2011. This mission resupplied
+the International Space Station and closed out a remarkable chapter in spaceflight history. The retirement of the Shuttle fleet left a
+gap in human spaceflight capability for several years until commercial crew vehicles achieved operational status. NASA's decision to
+transition from the Space Shuttle to newer exploration vehicles represented a strategic shift toward deep space exploration while fostering
+commercial space transportation development. The Space Shuttle program's innovations in thermal protection, reusable rocket engines, and
+orbital systems architecture continue to influence spacecraft design today. Future generations of spacecraft, whether NASA's Artemis program
+vehicles or emerging commercial offerings, build upon the foundational technologies and operational knowledge established during the Space
+Shuttle era.
 """

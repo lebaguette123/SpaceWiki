@@ -1,6 +1,6 @@
 use ratatui::Frame;
 use ratatui::layout::{Alignment, Constraint, Layout};
-use ratatui::prelude::Direction;
+use ratatui::prelude::{Direction, Stylize};
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span, Text};
 use crate::app::{type_display, App};
@@ -90,6 +90,7 @@ pub fn draw(frame: &mut Frame, app: &App){
     let sidebar_footer = Paragraph::new(vec![
         Line::styled("(j/k) scroll (enter) sel", Style::default().fg(Color::Rgb(60,60,60))),
         Line::styled("( [/] ) prev/next type", Style::default().fg(Color::Rgb(60,60,60))),
+        Line::styled("(i) toggle infobox", Style::default().fg(Color::Rgb(60,60,60))),
     ]).block(Block::default().borders(Borders::TOP)
         .border_style(Style::default().fg(Color::DarkGray)));
     frame.render_widget(sidebar_footer, sidebar_chunks[2]);
@@ -175,11 +176,22 @@ pub fn draw(frame: &mut Frame, app: &App){
             let has_stages = !article.infobox.stages.is_empty();
             let total_stage_h = if has_stages { row_heights.iter().sum::<u16>() + 2 } else { 0 };
             let total_infobox_h = (subtable_h + total_stage_h).min(main_inner.height.saturating_sub(8));
-            let main_chunks = Layout::vertical([
-                Constraint::Length(2),
-                Constraint::Length(total_infobox_h),
-                Constraint::Min(0),
-            ]).split(main_inner);
+            
+            // Layout depends on infobox collapse state
+            let main_chunks = if app.infobox_collapsed {
+                Layout::vertical([
+                    Constraint::Length(2),
+                    Constraint::Length(1),
+                    Constraint::Min(0),
+                ]).split(main_inner)
+            } else {
+                Layout::vertical([
+                    Constraint::Length(2),
+                    Constraint::Length(total_infobox_h),
+                    Constraint::Min(0),
+                ]).split(main_inner)
+            };
+
             let (t, st) = type_display_pretty(&article.article_type);
             let title_line = Line::from(vec![
                 Span::styled(format!(" {}", &article.title), Style::default().fg(Color::White).add_modifier(Modifier::BOLD)),
@@ -189,109 +201,118 @@ pub fn draw(frame: &mut Frame, app: &App){
             let par = Paragraph::new(title_line).block(Block::default().borders(Borders::BOTTOM));
             frame.render_widget(par, main_chunks[0]);
 
-            let infobox_block = Block::default()
-                .borders(Borders::ALL).border_type(BorderType::Rounded)
-                .border_style(Style::default().fg(Color::DarkGray))
-                .style(Style::default().bg(Color::Rgb(20, 20, 20)));
-            let mut link_counter: usize = 0;
-            let infobox_inner = infobox_block.inner(main_chunks[1]);
-            frame.render_widget(infobox_block, main_chunks[1]);
+            // Show collapsed header or full infobox
+            if app.infobox_collapsed {
+                let collapse_header = Paragraph::new(Line::styled(
+                    " [+] INFOBOX (press i to expand)",
+                    Style::default().fg(Color::DarkGray),
+                )).block(Block::default().borders(Borders::BOTTOM).style(Style::default().bg(Color::Rgb(20, 20, 20))));
+                frame.render_widget(collapse_header, main_chunks[1]);
+            } else {
+                let infobox_block = Block::default()
+                    .borders(Borders::ALL).border_type(BorderType::Rounded)
+                    .border_style(Style::default().fg(Color::DarkGray))
+                    .style(Style::default().bg(Color::Rgb(20, 20, 20)));
+                let mut link_counter: usize = 0;
+                let infobox_inner = infobox_block.inner(main_chunks[1]);
+                frame.render_widget(infobox_block, main_chunks[1]);
 
-            if has_stages {
-                let info_split = Layout::vertical([
-                    Constraint::Length(subtable_h),
-                    Constraint::Min(0)
-                ]).split(infobox_inner);
-                let sub_chunks = Layout::horizontal(vec![Constraint::Fill(1); cols]).split(info_split[0]);
-                for col_idx in 0..cols {
-                    let mut col_lines = Vec::new();
-                    for (i, (header, label, value)) in all_fields.iter().enumerate() {
-                        if i % cols == col_idx {
-                            if let Some(h) = header {
-                                if !col_lines.is_empty() {
+                if has_stages {
+                    let info_split = Layout::vertical([
+                        Constraint::Length(subtable_h),
+                        Constraint::Min(0)
+                    ]).split(infobox_inner);
+                    let sub_chunks = Layout::horizontal(vec![Constraint::Fill(1); cols]).split(info_split[0]);
+                    for col_idx in 0..cols {
+                        let mut col_lines = Vec::new();
+                        for (i, (header, label, value)) in all_fields.iter().enumerate() {
+                            if i % cols == col_idx {
+                                if let Some(h) = header {
+                                    if !col_lines.is_empty() {
+                                        col_lines.push(Line::raw(""));
+                                    }
+                                    col_lines.push(Line::from(Span::styled(
+                                        h.to_uppercase(),
+                                        Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+                                    )));
+                                } else if col_lines.is_empty() {
                                     col_lines.push(Line::raw(""));
                                 }
-                                col_lines.push(Line::from(Span::styled(
-                                    h.to_uppercase(),
-                                    Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
-                                )));
-                            } else if col_lines.is_empty() {
+                                col_lines.push(Line::from(Span::styled(label.replace("_", " ").to_uppercase(), Style::default().fg(Color::DarkGray))));
+
+                                let segments = segments_from_str(value);
+                                let spans: Vec<Span> = segments.iter()
+                                    .map(|s| process_segment(s, app.focused_link, &mut link_counter)).collect();
+                                col_lines.push(Line::from(spans));
                                 col_lines.push(Line::raw(""));
                             }
-                            col_lines.push(Line::from(Span::styled(label.replace("_", " ").to_uppercase(), Style::default().fg(Color::DarkGray))));
-
-                            // VALUE LOGIC
-                            let segments = segments_from_str(value);
-                            let spans: Vec<Span> = segments.iter()
-                                .map(|s| process_segment(s, app.focused_link, &mut link_counter)).collect();
-                            col_lines.push(Line::from(spans));
-                            col_lines.push(Line::raw(""));
                         }
+                        frame.render_widget(Paragraph::new(col_lines), sub_chunks[col_idx]);
                     }
-                    frame.render_widget(Paragraph::new(col_lines), sub_chunks[col_idx]);
-                }
-                let stages_block = Block::default()
-                    .title(Span::styled(" STAGES ", Style::default().fg(Color::DarkGray).add_modifier(Modifier::BOLD)))
-                    .borders(Borders::ALL).border_style(Style::default().fg(Color::Rgb(45, 45, 45)));
-                let stages_inner = stages_block.inner(info_split[1]);
-                frame.render_widget(stages_block, info_split[1]);
+                    let stages_block = Block::default()
+                        .title(Span::styled(" STAGES ", Style::default().fg(Color::DarkGray).add_modifier(Modifier::BOLD)))
+                        .borders(Borders::ALL).border_style(Style::default().fg(Color::Rgb(45, 45, 45)));
+                    let stages_inner = stages_block.inner(info_split[1]);
+                    frame.render_widget(stages_block, info_split[1]);
 
-                let row_layout = Layout::vertical(row_heights.iter().map(|&h| Constraint::Length(h)).collect::<Vec<_>>()).split(stages_inner);
-                for (r_idx, row) in article.infobox.stages.chunks(stages_per_row).enumerate() {
-                    let col_layout = Layout::horizontal(vec![Constraint::Fill(1); row.len()]).split(row_layout[r_idx]);
-                    for (c_idx, stage) in row.iter().enumerate() {
-                        let mut s_lines = Vec::new();
-                        let mut head = vec![Span::styled(format!("STAGE {}", (r_idx * stages_per_row) + c_idx + 1), Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))];
-                        if stage.bespoke { head.push(Span::raw("   ")); head.push(Span::styled("BESPOKE", Style::default().fg(Color::Rgb(255, 215, 0)).add_modifier(Modifier::BOLD))); }
-                        s_lines.push(Line::from(head));
-                        s_lines.push(Line::from(process_segment(&stage.name, app.focused_link, &mut link_counter)));
-                        if !stage.description.is_empty() {
-                            let spans: Vec<Span> = stage.description.iter().map(|s| {
-                                let mut span = process_segment(s, app.focused_link, &mut link_counter);
-                                if matches!(s, Segment::Text(_)) { span.style = Style::default().fg(Color::Rgb(170, 170, 170)); }
-                                span
-                            }).collect();
-                            s_lines.push(Line::from(spans));
-                        }
-                        s_lines.push(Line::raw(""));
-                        if !stage.engines.is_empty() {
-                            s_lines.push(Line::from(Span::styled("ENGINES", Style::default().fg(Color::DarkGray).add_modifier(Modifier::BOLD))));
-                            for eng in &stage.engines {
-                                let mut spans = vec![Span::raw(" • ")];
-                                for s in eng { spans.push(process_segment(s, app.focused_link, &mut link_counter)); }
+                    let row_layout = Layout::vertical(row_heights.iter().map(|&h| Constraint::Length(h)).collect::<Vec<_>>()).split(stages_inner);
+                    for (r_idx, row) in article.infobox.stages.chunks(stages_per_row).enumerate() {
+                        let col_layout = Layout::horizontal(vec![Constraint::Fill(1); row.len()]).split(row_layout[r_idx]);
+                        for (c_idx, stage) in row.iter().enumerate() {
+                            let mut s_lines = Vec::new();
+                            let mut head = vec![Span::styled(format!("STAGE {}", (r_idx * stages_per_row) + c_idx + 1), Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))];
+                            if stage.bespoke { head.push(Span::raw("   ")); head.push(Span::styled("BESPOKE", Style::default().fg(Color::Rgb(255, 215, 0)).add_modifier(Modifier::BOLD))); }
+                            s_lines.push(Line::from(head));
+                            s_lines.push(Line::from(process_segment(&stage.name, app.focused_link, &mut link_counter)));
+                            if !stage.description.is_empty() {
+                                let spans: Vec<Span> = stage.description.iter().map(|s| {
+                                    let mut span = process_segment(s, app.focused_link, &mut link_counter);
+                                    if matches!(s, Segment::Text(_)) { span.style = Style::default().fg(Color::Rgb(170, 170, 170)); }
+                                    span
+                                }).collect();
                                 s_lines.push(Line::from(spans));
                             }
+                            s_lines.push(Line::raw(""));
+                            if !stage.engines.is_empty() {
+                                s_lines.push(Line::from(Span::styled("ENGINES", Style::default().fg(Color::DarkGray).add_modifier(Modifier::BOLD))));
+                                for eng in &stage.engines {
+                                    let mut spans = vec![Span::raw(" • ")];
+                                    for s in eng { spans.push(process_segment(s, app.focused_link, &mut link_counter)); }
+                                    s_lines.push(Line::from(spans));
+                                }
+                            }
+                            if !stage.propellant.trim().is_empty() {
+                                s_lines.push(Line::from(vec![Span::styled("PROPELLANT: ", Style::default().fg(Color::DarkGray).add_modifier(Modifier::BOLD)), Span::styled(&stage.propellant, Style::default().fg(Color::Gray).add_modifier(Modifier::ITALIC))]));
+                            }
+                            frame.render_widget(Paragraph::new(s_lines).wrap(Wrap { trim: true }).block(Block::default().borders(Borders::LEFT | Borders::RIGHT).border_style(Style::default().fg(Color::Rgb(40, 40, 40))).padding(Padding::horizontal(1))), col_layout[c_idx]);
                         }
-                        if !stage.propellant.trim().is_empty() {
-                            s_lines.push(Line::from(vec![Span::styled("PROPELLANT: ", Style::default().fg(Color::DarkGray).add_modifier(Modifier::BOLD)), Span::styled(&stage.propellant, Style::default().fg(Color::Gray).add_modifier(Modifier::ITALIC))]));
-                        }
-                        frame.render_widget(Paragraph::new(s_lines).wrap(Wrap { trim: true }).block(Block::default().borders(Borders::LEFT | Borders::RIGHT).border_style(Style::default().fg(Color::Rgb(40, 40, 40))).padding(Padding::horizontal(1))), col_layout[c_idx]);
                     }
-                }
-            } else {
-                let sub_chunks = Layout::horizontal(vec![Constraint::Fill(1); cols]).split(infobox_inner);
-                for col_idx in 0..cols {
-                    let mut col_lines = Vec::new();
-                    for (i, (header, label, value)) in all_fields.iter().enumerate() {
-                        if i % cols == col_idx {
-                            if let Some(h) = header {
-                                col_lines.push(Line::from(Span::styled(h.to_uppercase(), Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))));
-                            } else if col_lines.is_empty() {
+                } else {
+                    let sub_chunks = Layout::horizontal(vec![Constraint::Fill(1); cols]).split(infobox_inner);
+                    for col_idx in 0..cols {
+                        let mut col_lines = Vec::new();
+                        for (i, (header, label, value)) in all_fields.iter().enumerate() {
+                            if i % cols == col_idx {
+                                if let Some(h) = header {
+                                    col_lines.push(Line::from(Span::styled(h.to_uppercase(), Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))));
+                                } else if col_lines.is_empty() {
+                                    col_lines.push(Line::raw(""));
+                                }
+                                col_lines.push(Line::from(Span::styled(label.replace("_", " ").to_uppercase(), Style::default().fg(Color::DarkGray))));
+                                let segments = segments_from_str(value);
+                                let spans: Vec<Span> = segments.iter()
+                                    .map(|s| process_segment(s, app.focused_link, &mut link_counter)).collect();
+                                col_lines.push(Line::from(spans));
                                 col_lines.push(Line::raw(""));
                             }
-                            col_lines.push(Line::from(Span::styled(label.replace("_", " ").to_uppercase(), Style::default().fg(Color::DarkGray))));
-                            let segments = segments_from_str(value);
-                            let spans: Vec<Span> = segments.iter()
-                                .map(|s| process_segment(s, app.focused_link, &mut link_counter)).collect();
-                            col_lines.push(Line::from(spans));
-                            col_lines.push(Line::raw(""));
                         }
+                        frame.render_widget(Paragraph::new(col_lines), sub_chunks[col_idx]);
                     }
-                    frame.render_widget(Paragraph::new(col_lines), sub_chunks[col_idx]);
                 }
             }
 
             let mut body = Vec::new();
+            let mut link_counter: usize = 0;
             for block in &article.body.blocks {
                 match block {
                     BodyBlock::Heading { level, text } => {
@@ -311,7 +332,20 @@ pub fn draw(frame: &mut Frame, app: &App){
                     }
                 }
             }
-            frame.render_widget(Paragraph::new(body).wrap(Wrap { trim: false }).block(Block::default().padding(Padding::horizontal(1))), main_chunks[2]);
+            
+            // Apply scroll offset
+            let scroll_offset = app.scroll_offset as usize;
+            let visible_height = main_chunks[2].height as usize;
+            let total_lines = body.len();
+            
+            // Limit scroll offset to prevent scrolling past the end
+            let max_scroll = total_lines.saturating_sub(visible_height);
+            let actual_scroll = scroll_offset.min(max_scroll);
+            
+            // Get the visible portion of the body
+            let body_to_render: Vec<Line> = body.into_iter().skip(actual_scroll).take(visible_height).collect();
+            
+            frame.render_widget(Paragraph::new(body_to_render).wrap(Wrap { trim: false }).block(Block::default().padding(Padding::horizontal(1))), main_chunks[2]);
         }
     }
 }

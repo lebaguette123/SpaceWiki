@@ -1,5 +1,6 @@
 use std::fs::read_dir;
 use std::collections::{VecDeque,HashMap};
+use std::path::Path;
 use crate::types::{Article, ArticleType, Block, EngineSubtype, LaunchVehicleSubtype, Segment, SidebarEntry, SpacecraftSubtype};
 use crate::article::load_article;
 use crate::link::{LinkSource, NavLink};
@@ -13,12 +14,14 @@ pub struct App{
     pub infobox_link_count: usize,
     pub focused_link: Option<usize>,
     pub history: VecDeque<String>,
+    pub scroll_offset: u16,
+    pub infobox_collapsed: bool,
 }
 impl App{
-    pub fn new() -> Result<App, Box<dyn std::error::Error>>{
+    pub fn new(article_path: &Path) -> Result<App, Box<dyn std::error::Error>>{
         let mut loaded_articles = HashMap::new();
 
-        for entry in read_dir("articles/")? {
+        for entry in read_dir(article_path)? {
             let entry = entry?;
             let path = entry.path();
 
@@ -38,6 +41,8 @@ impl App{
             infobox_link_count: 0,
             focused_link: None,
             history: VecDeque::new(),
+            scroll_offset: 0,
+            infobox_collapsed: false,
         })
     }
 
@@ -212,6 +217,10 @@ impl App{
         }
     }
 
+    pub fn toggle_infobox(&mut self) {
+        self.infobox_collapsed = !self.infobox_collapsed;
+    }
+
     pub fn jump_to_next_type_heading(&mut self){
         let entries = self.sidebar_entries();
         let len = entries.len();
@@ -275,6 +284,14 @@ impl App{
             self.open_article(&target).ok();
         }
     }
+
+    pub fn scroll_down(&mut self){
+        self.scroll_offset = self.scroll_offset.saturating_add(3);
+    }
+
+    pub fn scroll_up(&mut self){
+        self.scroll_offset = self.scroll_offset.saturating_sub(3);
+    }
     fn navigate_to(&mut self, name: &str)->Result<(), String>{
         if self.loaded_articles.contains_key(name){
             self.current_article = Some(name.to_string());
@@ -284,6 +301,7 @@ impl App{
             self.selected_sidebar_index = index;
             self.build_nav_links();
             self.focused_link = None;
+            self.scroll_offset = 0;
             Ok(())
         } else {
             Err("Article not found".to_string())
