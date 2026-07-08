@@ -15,6 +15,7 @@ pub struct App{
     pub focused_link: Option<usize>,
     pub history: VecDeque<String>,
     pub scroll_offset: u16,
+    pub page_scroll: u16,
     pub infobox_collapsed: bool,
 }
 impl App{
@@ -42,6 +43,7 @@ impl App{
             focused_link: None,
             history: VecDeque::new(),
             scroll_offset: 0,
+            page_scroll: 1,
             infobox_collapsed: false,
         })
     }
@@ -285,12 +287,12 @@ impl App{
         }
     }
 
-    pub fn scroll_down(&mut self){
-        self.scroll_offset = self.scroll_offset.saturating_add(3);
+    pub fn scroll_down(&mut self, amount: u16){
+        self.scroll_offset = self.scroll_offset.saturating_add(amount);
     }
 
-    pub fn scroll_up(&mut self){
-        self.scroll_offset = self.scroll_offset.saturating_sub(3);
+    pub fn scroll_up(&mut self, amount: u16){
+        self.scroll_offset = self.scroll_offset.saturating_sub(amount);
     }
     fn navigate_to(&mut self, name: &str)->Result<(), String>{
         if self.loaded_articles.contains_key(name){

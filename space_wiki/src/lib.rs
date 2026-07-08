@@ -7,7 +7,7 @@ pub mod link;
 
 use std::io::stdout;
 use std::path::Path;
-use crossterm::event::{self, Event, KeyCode};
+use crossterm::event::{self, Event, KeyCode, MouseEventKind};
 use crossterm::event::KeyEventKind::{Press, Repeat};
 use crossterm::execute;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
@@ -31,9 +31,10 @@ pub fn run(article_path: &Path){
     let mut terminal = Terminal::new(backend).unwrap();
 
     loop{
-        terminal.draw(|frame| ui::draw(frame, &app)).unwrap();
-        if let Ok(Event::Key(key)) = event::read() {
-            match key.code{
+        terminal.draw(|frame| ui::draw(frame, &mut app)).unwrap();
+        if let Ok(event) = event::read() {
+            match event {
+                Event::Key(key) => match key.code{
                 KeyCode::Up | KeyCode::Char('k') if key.kind == Press || key.kind == Repeat => {
                     app.move_sidebar_up();
                 },
@@ -69,9 +70,16 @@ pub fn run(article_path: &Path){
                 KeyCode::Char(']') if key.kind == Press => app.jump_to_next_type_heading(),
                 KeyCode::Char('i') if key.kind == Press => app.toggle_infobox(),
                 KeyCode::Esc if key.kind == Press => app.focused_link = None,
-                KeyCode::PageUp if key.kind == Press || key.kind == Repeat => app.scroll_up(),
-                KeyCode::PageDown if key.kind == Press || key.kind == Repeat => app.scroll_down(),
+                KeyCode::PageUp if key.kind == Press || key.kind == Repeat => app.scroll_up(app.page_scroll),
+                KeyCode::PageDown if key.kind == Press || key.kind == Repeat => app.scroll_down(app.page_scroll),
                 _ => ()
+                },
+                Event::Mouse(mouse) => match mouse.kind {
+                    MouseEventKind::ScrollUp => app.scroll_up(3),
+                    MouseEventKind::ScrollDown => app.scroll_down(3),
+                    _ => {}
+                },
+                _ => {}
             }
         }
     }

@@ -1,6 +1,6 @@
 use ratatui::Frame;
 use ratatui::layout::{Alignment, Constraint, Layout};
-use ratatui::prelude::{Direction, Stylize};
+use ratatui::prelude::Direction;
 use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span, Text};
 use crate::app::{type_display, App};
@@ -30,7 +30,24 @@ fn process_segment(
     }
 }
 
-pub fn draw(frame: &mut Frame, app: &App){
+fn line_width(line: &Line) -> usize {
+    line.spans.iter().map(|span| span.content.chars().count()).sum()
+}
+
+fn wrapped_height(lines: &[Line], width: u16) -> usize {
+    let width = width.max(1) as usize;
+
+    lines.iter().map(|line| {
+        let line_width = line_width(line);
+        if line_width == 0 {
+            1
+        } else {
+            (line_width + width - 1) / width
+        }
+    }).sum()
+}
+
+pub fn draw(frame: &mut Frame, app: &mut App){
     const MIN_WIDTH: u16 = 80;
     const MIN_HEIGHT: u16 = 24;
     let area = frame.area();
@@ -309,10 +326,13 @@ pub fn draw(frame: &mut Frame, app: &App){
                         frame.render_widget(Paragraph::new(col_lines), sub_chunks[col_idx]);
                     }
                 }
+
+                // Preserve link numbering so body links continue after infobox links.
+                // This avoids selecting the wrong link when the article has both infobox and body links.
             }
 
             let mut body = Vec::new();
-            let mut link_counter: usize = 0;
+            let mut link_counter: usize = app.infobox_link_count;
             for block in &article.body.blocks {
                 match block {
                     BodyBlock::Heading { level, text } => {
@@ -336,16 +356,24 @@ pub fn draw(frame: &mut Frame, app: &App){
             // Apply scroll offset
             let scroll_offset = app.scroll_offset as usize;
             let visible_height = main_chunks[2].height as usize;
-            let total_lines = body.len();
-            
-            // Limit scroll offset to prevent scrolling past the end
+            let body_width = main_chunks[2].width.saturating_sub(2);
+            app.page_scroll = (main_chunks[2].height / 2).max(1);
+            let total_lines = wrapped_height(&body, body_width);
+
+            // Clamp using the wrapped line count so narrow windows can still reach the end.
             let max_scroll = total_lines.saturating_sub(visible_height);
             let actual_scroll = scroll_offset.min(max_scroll);
             
             // Get the visible portion of the body
-            let body_to_render: Vec<Line> = body.into_iter().skip(actual_scroll).take(visible_height).collect();
-            
-            frame.render_widget(Paragraph::new(body_to_render).wrap(Wrap { trim: false }).block(Block::default().padding(Padding::horizontal(1))), main_chunks[2]);
+            app.scroll_offset = actual_scroll.min(u16::MAX as usize) as u16;
+
+            frame.render_widget(
+                Paragraph::new(body)
+                    .wrap(Wrap { trim: false })
+                    .scroll((actual_scroll.min(u16::MAX as usize) as u16, 0))
+                    .block(Block::default().padding(Padding::horizontal(1))),
+                main_chunks[2],
+            );
         }
     }
 }
