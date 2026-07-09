@@ -6,7 +6,7 @@ pub mod ui;
 pub mod link;
 
 use std::io::stdout;
-use std::path::Path;
+use std::path::PathBuf;
 use crossterm::event::{self, Event, KeyCode, MouseEventKind};
 use crossterm::event::KeyEventKind::{Press, Repeat};
 use crossterm::execute;
@@ -20,8 +20,9 @@ fn cleanup(){
     execute!(stdout(),LeaveAlternateScreen).unwrap();
     disable_raw_mode().unwrap();
 }
-pub fn run(article_path: &Path){
-    let mut app = App::new(article_path).unwrap();
+pub fn run(){
+    let article_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("articles");
+    let mut app = App::new(&article_path).unwrap();
 
     std::panic::set_hook(Box::new(|_| cleanup()));
     enable_raw_mode().unwrap();
